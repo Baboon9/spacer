@@ -1,5 +1,7 @@
 package com.mygdx.game;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -23,9 +25,8 @@ public class MyGdxGame implements ApplicationListener {
 	ModelBatch modelBatch;
 	Array<ModelInstance> instances;
 	Environment environment;
-	Model model;
-	ModelInstance ground;
-	ModelInstance ball;
+
+	ArrayList<Ball> balls = new ArrayList<Ball>();
 	
 	boolean collision;
 	
@@ -38,40 +39,21 @@ public class MyGdxGame implements ApplicationListener {
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(3f, 7f, 10f);
-		cam.lookAt(0, 4f, 0);
+		cam.position.set(0f, 0f, 1000f);
+		cam.lookAt(0, 0f, 0);
 		cam.update();
 
 		camController = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(camController);
-		ModelBuilder mb = new ModelBuilder();
-		mb.begin();
-		mb.node().id = "ground";
-		mb.part("box", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.RED)))
-			.box(5f, 1f, 5f);
-		mb.node().id = "ball";
-		mb.part("sphere", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GREEN)))
-			.sphere(1f, 1f, 1f, 10, 10);
-		model = mb.end();
 		
-		ground = new ModelInstance(model, "ground");
-		ball = new ModelInstance(model, "ball");
-		ball.transform.setToTranslation(0, 9f, 0);
+		balls.add(new Ball(0.5f, 0.5f));
+		balls.add(new Ball(-0.5f, -0.5f));
 		
-		instances = new Array<ModelInstance>();
-		instances.add(ground);
-		instances.add(ball);
 
 	}
 	
 	@Override
 	public void render () {
-		final float delta = Math.min(1f/30f, Gdx.graphics.getDeltaTime());
-		
-		if (!collision) {
-			ball.transform.translate(0f, -delta, 0f);
-			collision = checkCollision();
-		}
 		
 		camController.update();
 		
@@ -79,13 +61,14 @@ public class MyGdxGame implements ApplicationListener {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
 		modelBatch.begin(cam);
-		modelBatch.render(instances, environment);
+		for (Ball ball : balls) {
+			ball.update();
+			modelBatch.render(ball.instance, environment);
+			
+		}
 		modelBatch.end();
 	}
 	
-	boolean checkCollision() {
-		return false;
-	}
 
 	@Override
 	public void dispose () {
